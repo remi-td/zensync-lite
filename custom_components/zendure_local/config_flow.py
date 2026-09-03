@@ -8,10 +8,23 @@ from typing import Any
 try:
     import voluptuous as vol
     from homeassistant import config_entries
-    from homeassistant.components.zeroconf import ZeroconfServiceInfo
+    try:
+        from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+    except ImportError:
+        try:
+            from homeassistant.components.zeroconf import ZeroconfServiceInfo
+        except ImportError:
+            class ZeroconfServiceInfo:  # type: ignore
+                host: str = ""
+                port: int | None = None
+                name: str = ""
+
     from homeassistant.const import CONF_HOST, CONF_PORT
     from homeassistant.core import callback
-    from homeassistant.data_entry_flow import FlowResult
+    try:
+        from homeassistant.config_entries import ConfigFlowResult as FlowResult
+    except ImportError:
+        from homeassistant.data_entry_flow import FlowResult  # type: ignore
 except ImportError:
     # Standalone mock for unit testing
     class FlowResult(dict):  # type: ignore
