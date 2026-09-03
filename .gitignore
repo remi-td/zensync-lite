@@ -35,3 +35,7 @@ htmlcov/
 .DS_Store
 .idea/
 .vscode/
+
+# Home Assistant sandbox runtime data
+ha_sandbox/config/*
+!ha_sandbox/config/configuration.yaml

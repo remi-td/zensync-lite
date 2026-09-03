@@ -244,8 +244,8 @@ CAPABILITY_MATRIX: dict[str, DeviceCapability] = {
 
 
 def _normalize_name(name: str) -> str:
-    """Normalize string by removing whitespace and special characters for matching."""
-    return re.sub(r"[^a-zA-Z0-9]", "", name).lower()
+    """Normalize string by removing whitespace and special characters (preserving +) for matching."""
+    return re.sub(r"[^a-zA-Z0-9+]", "", name).lower()
 
 
 def get_device_capability(model_name: str | None) -> DeviceCapability:

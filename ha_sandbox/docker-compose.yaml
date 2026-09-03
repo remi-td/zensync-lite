@@ -1,0 +1,13 @@
+services:
+  homeassistant:
+    container_name: zendure-ha-sandbox
+    image: ghcr.io/home-assistant/home-assistant:stable
+    restart: unless-stopped
+    ports:
+      - "8123:8123"
+    volumes:
+      - ./config:/config
+      - ../custom_components/zendure_local:/config/custom_components/zendure_local
+      - ../blueprints/automation/surplus_controller.yaml:/config/blueprints/automation/zendure_local/surplus_controller.yaml
+    environment:
+      - TZ=Europe/Paris

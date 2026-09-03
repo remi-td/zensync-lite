@@ -170,6 +170,12 @@ def parse_pack_data(raw_packs: list[dict[str, Any]]) -> list[ZendurePackState]:
         min_vol = item.get("minVol")
         min_vol_v = round(min_vol / 100.0, 2) if min_vol is not None else None
 
+        total_vol = item.get("totalVol")
+        total_vol_v = None
+        if total_vol is not None:
+            v_flt = float(total_vol)
+            total_vol_v = round(v_flt / 100.0, 2) if v_flt > 500 else round(v_flt, 2)
+
         pack = ZendurePackState(
             sn=sn,
             pack_type=item.get("packType"),
@@ -177,7 +183,7 @@ def parse_pack_data(raw_packs: list[dict[str, Any]]) -> list[ZendurePackState]:
             state=pack_state,
             power_w=item.get("power"),
             max_temp_c=convert_temperature_kelvin_tenth(item.get("maxTemp")),
-            total_vol_v=float(item["totalVol"]) if item.get("totalVol") is not None else None,
+            total_vol_v=total_vol_v,
             current_a=convert_current_amps(item.get("batcur")),
             max_cell_vol_v=max_vol_v,
             min_cell_vol_v=min_vol_v,
@@ -232,7 +238,11 @@ def parse_report_payload(
     temp_c = None
     if PROP_HYPER_TMP in raw_props and raw_props[PROP_HYPER_TMP] is not None:
         try:
-            temp_c = float(raw_props[PROP_HYPER_TMP])
+            raw_tmp = float(raw_props[PROP_HYPER_TMP])
+            if raw_tmp > 1000:
+                temp_c = convert_temperature_kelvin_tenth(int(raw_tmp))
+            else:
+                temp_c = raw_tmp
         except (ValueError, TypeError):
             temp_c = None
 
@@ -244,20 +254,31 @@ def parse_report_payload(
         if pack_temps:
             temp_c = max(pack_temps)
 
-    # Retain existing values if missing from new payload to avoid offline resets
-    def _value(key: str, existing_val: Any) -> Any:
-        val = raw_props.get(key)
-        return val if val is not None else existing_val
+    def _normalize_soc_pct(val: Any, is_min_soc: bool = False) -> int | None:
+        if val is None:
+            return None
+        try:
+            v = int(val)
+            if v > 100:
+                return round(v / 10)
+            if is_min_soc and v == 100:
+                # Minimum SOC cannot be 100% (range is 0-50%), so 100 represents 10.0%
+                return 10
+            return v
+        except (ValueError, TypeError):
+            return None
 
     soc = raw_props.get(PROP_ELECTRIC_LEVEL)
     if soc is None and existing_state:
         soc = existing_state.soc_percent
 
-    min_soc = raw_props.get(PROP_MIN_SOC)
+    min_soc = _normalize_soc_pct(raw_props.get(PROP_MIN_SOC), is_min_soc=True)
     if min_soc is None and existing_state:
         min_soc = existing_state.min_soc_percent
 
-    soc_set = raw_props.get(PROP_SOC_SET)
+    soc_set = _normalize_soc_pct(raw_props.get(PROP_SOC_SET))
+    if soc_set is None and existing_state:
+        soc_set = existing_state.target_soc_percent
     if soc_set is None and existing_state:
         soc_set = existing_state.target_soc_percent
 
