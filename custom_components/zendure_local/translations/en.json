@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Zendure Local Battery",
+        "description": "Enter the IP address of your Zendure battery device. The integration will connect directly over your local network using the ZenSDK HTTP API.",
+        "data": {
+          "host": "IP Address or Hostname",
+          "port": "Port",
+          "serial": "Serial Number (Optional)",
+          "model": "Model Override (Optional)",
+          "volatile_writes": "Enable Volatile Writes (Prevents Flash Wear)"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Discovered Zendure Device",
+        "description": "Discovered Zendure {model} ({serial}) at {host}. Would you like to set up local control for this battery?"
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to device. Verify the IP address and ensure the device is on the same subnet/VLAN as Home Assistant.",
+      "timeout": "Connection timed out connecting to the device.",
+      "hems_not_enabled": "Local HTTP API is not responding. Under EN 18031, you must add HEMS in the Zendure mobile app and then exit to apply local API access.",
+      "missing_serial": "Could not determine serial number from device report.",
+      "unknown_device": "Could not identify a valid Zendure device from discovery.",
+      "unknown": "Unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "Device is already configured",
+      "unknown_device": "Discovered service did not supply a valid Zendure serial"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Zendure Local Options",
+        "description": "Adjust local battery control preferences.",
+        "data": {
+          "volatile_writes": "Volatile writes (smartMode: 1) - memory only, avoids flash wear",
+          "poll_interval": "Polling interval in seconds"
+        }
+      }
+    }
+  },
+  "issues": {
+    "ip_unreachable": {
+      "title": "Zendure device {serial} unreachable",
+      "description": "Home Assistant cannot reach Zendure device {serial} at IP address {host}. Automatic rediscovery has been triggered. Please ensure the battery is powered on and connected to your network."
+    }
+  }
+}

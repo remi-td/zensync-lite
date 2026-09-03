@@ -1,0 +1,18 @@
+{
+  "domain": "zendure_local",
+  "name": "Zendure Local Battery Control",
+  "codeowners": ["@remi.turpaud"],
+  "config_flow": true,
+  "dependencies": ["zeroconf"],
+  "documentation": "https://github.com/remi-turpaud/zndure-ha-lite",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/remi-turpaud/zndure-ha-lite/issues",
+  "requirements": [],
+  "version": "1.0.0",
+  "zeroconf": [
+    {
+      "type": "_zendure._tcp.local."
+    }
+  ]
+}

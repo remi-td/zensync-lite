@@ -1,0 +1,183 @@
+blueprint:
+  name: "Zendure Battery Solar Surplus Controller"
+  description: >
+    Dynamically balances household grid surplus with Zendure battery charge and discharge limits.
+    Separates energy management strategy from the core device integration and prevents flash wear.
+  domain: automation
+  input:
+    grid_power_sensor:
+      name: Grid Power Sensor
+      description: Sensor reporting home grid power in Watts.
+      selector:
+        entity:
+          domain: sensor
+          device_class: power
+    sign_convention:
+      name: Grid Sign Convention
+      description: How your grid meter reports energy flow.
+      default: "export_positive"
+      selector:
+        select:
+          options:
+            - label: "Export is Positive (+500W means sending power to grid / surplus)"
+              value: "export_positive"
+            - label: "Import is Positive (+500W means buying power from grid / deficit)"
+              value: "import_positive"
+    battery_soc_sensor:
+      name: Battery SOC Sensor
+      description: Current state of charge sensor for the Zendure battery.
+      selector:
+        entity:
+          domain: sensor
+          device_class: battery
+    charge_limit_entity:
+      name: Charge Limit Entity
+      description: The number entity controlling battery charging limit (inputLimit).
+      selector:
+        entity:
+          domain: number
+    output_limit_entity:
+      name: Discharge / Output Limit Entity
+      description: The number entity controlling home output limit (outputLimit).
+      selector:
+        entity:
+          domain: number
+    mode_select_entity:
+      name: Operating Mode Entity
+      description: The select entity controlling inverter operating mode (acMode).
+      selector:
+        entity:
+          domain: select
+    enable_switch:
+      name: Enable Helper (Optional)
+      description: Input boolean or switch to enable/disable automated surplus control.
+      default: ""
+      selector:
+        entity:
+          domain: [input_boolean, switch]
+    minimum_soc:
+      name: Minimum Discharge SOC (%)
+      description: Stop discharging when battery SOC falls below this threshold.
+      default: 15
+      selector:
+        number:
+          min: 0
+          max: 50
+          step: 1
+          unit_of_measurement: "%"
+    maximum_soc:
+      name: Maximum Charge SOC (%)
+      description: Stop charging when battery SOC exceeds this threshold.
+      default: 95
+      selector:
+        number:
+          min: 70
+          max: 100
+          step: 1
+          unit_of_measurement: "%"
+    deadband_watts:
+      name: Power Deadband (W)
+      description: Ignore grid power fluctuations smaller than this deadband to avoid chatter.
+      default: 50
+      selector:
+        number:
+          min: 10
+          max: 200
+          step: 10
+          unit_of_measurement: W
+    max_charge_watts:
+      name: Maximum Allowed Charge Power (W)
+      default: 1200
+      selector:
+        number:
+          min: 100
+          max: 3200
+          step: 100
+          unit_of_measurement: W
+    max_discharge_watts:
+      name: Maximum Allowed Discharge Power (W)
+      default: 800
+      selector:
+        number:
+          min: 100
+          max: 2400
+          step: 100
+          unit_of_measurement: W
+
+trigger:
+  - platform: state
+    entity_id: !input grid_power_sensor
+
+variables:
+  grid_entity: !input grid_power_sensor
+  raw_grid: "{{ states(grid_entity) | float(0) }}"
+  sign: !input sign_convention
+  # Normalize so that surplus > 0 is power sent to grid, surplus < 0 is deficit/import from grid
+  surplus_power: "{{ raw_grid if sign == 'export_positive' else -1.0 * raw_grid }}"
+  soc_entity: !input battery_soc_sensor
+  current_soc: "{{ states(soc_entity) | int(50) }}"
+  min_soc: !input minimum_soc
+  max_soc: !input maximum_soc
+  deadband: !input deadband_watts
+  max_charge: !input max_charge_watts
+  max_discharge: !input max_discharge_watts
+  enable_entity: !input enable_switch
+
+condition:
+  # Check if enable helper is turned on (if configured)
+  - condition: template
+    value_template: >
+      {{ enable_entity == '' or is_state(enable_entity, 'on') }}
+
+action:
+  - choose:
+      # Case 1: Solar Surplus available (grid surplus > deadband) and battery not full
+      - conditions:
+          - condition: template
+            value_template: "{{ surplus_power > deadband and current_soc < max_soc }}"
+        sequence:
+          - service: select.select_option
+            target:
+              entity_id: !input mode_select_entity
+            data:
+              option: charge
+          - service: number.set_value
+            target:
+              entity_id: !input charge_limit_entity
+            data:
+              value: "{{ [surplus_power | int, max_charge] | min }}"
+
+      # Case 2: Deficit / Grid Import (surplus < -deadband) and battery above minimum SOC
+      - conditions:
+          - condition: template
+            value_template: "{{ surplus_power < -1.0 * deadband and current_soc > min_soc }}"
+        sequence:
+          - service: select.select_option
+            target:
+              entity_id: !input mode_select_entity
+            data:
+              option: discharge
+          - service: number.set_value
+            target:
+              entity_id: !input output_limit_entity
+            data:
+              value: "{{ [(-1.0 * surplus_power) | int, max_discharge] | min }}"
+
+      # Case 3: Battery full or below min SOC -> reduce limits safely
+      - conditions:
+          - condition: template
+            value_template: "{{ (current_soc >= max_soc and surplus_power > 0) or (current_soc <= min_soc and surplus_power < 0) }}"
+        sequence:
+          - service: number.set_value
+            target:
+              entity_id: !input output_limit_entity
+            data:
+              value: 0
+          - service: number.set_value
+            target:
+              entity_id: !input charge_limit_entity
+            data:
+              value: 0
+
+mode: single
+max_exceeded: silent

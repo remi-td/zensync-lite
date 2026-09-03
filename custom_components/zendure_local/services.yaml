@@ -1,0 +1,115 @@
+set_charge_limit:
+  name: Set Charge Limit
+  description: Set the maximum AC charging power limit in Watts.
+  target:
+    device:
+      integration: zendure_local
+    entity:
+      integration: zendure_local
+  fields:
+    limit:
+      name: Limit (W)
+      description: Target AC charging limit in Watts.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 3600
+          step: 10
+          unit_of_measurement: W
+
+set_output_limit:
+  name: Set Output Limit
+  description: Set the maximum home discharge power limit in Watts.
+  target:
+    device:
+      integration: zendure_local
+    entity:
+      integration: zendure_local
+  fields:
+    limit:
+      name: Limit (W)
+      description: Target discharge limit in Watts.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 3600
+          step: 10
+          unit_of_measurement: W
+
+set_mode:
+  name: Set Operating Mode
+  description: Set the AC inverter operating mode (Charge or Discharge).
+  target:
+    device:
+      integration: zendure_local
+    entity:
+      integration: zendure_local
+  fields:
+    mode:
+      name: Mode
+      description: Inverter operating mode.
+      required: true
+      selector:
+        select:
+          options:
+            - label: Charge (Grid to Battery)
+              value: charge
+            - label: Discharge (Battery to Home)
+              value: discharge
+
+set_soc_limits:
+  name: Set SOC Limits
+  description: Update minimum discharge and target charge SOC percentage thresholds.
+  target:
+    device:
+      integration: zendure_local
+    entity:
+      integration: zendure_local
+  fields:
+    min_soc:
+      name: Minimum SOC (%)
+      description: Lower discharge threshold limit percentage.
+      required: false
+      selector:
+        number:
+          min: 0
+          max: 50
+          unit_of_measurement: "%"
+    target_soc:
+      name: Target SOC (%)
+      description: Upper charge threshold limit percentage.
+      required: false
+      selector:
+        number:
+          min: 70
+          max: 100
+          unit_of_measurement: "%"
+
+stop_output:
+  name: Stop Output
+  description: Immediately stops home power output by setting discharge limit to 0W.
+  target:
+    device:
+      integration: zendure_local
+    entity:
+      integration: zendure_local
+
+refresh:
+  name: Refresh
+  description: Request immediate status update from the battery device.
+  target:
+    device:
+      integration: zendure_local
+    entity:
+      integration: zendure_local
+
+rediscover:
+  name: Rediscover
+  description: Trigger mDNS rediscovery and verify endpoint connection.
+  target:
+    device:
+      integration: zendure_local
+    entity:
+      integration: zendure_local
