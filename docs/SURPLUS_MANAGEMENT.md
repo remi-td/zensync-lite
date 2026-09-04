@@ -110,7 +110,24 @@ Raw Grid Sensor (1 Hz)
 Physical Zendure Inverter (Zero Flash Wear, Confirmed Write)
 ```
 
-### Blueprint Parameters:
+### Blueprint Entity Mapping:
+
+When creating an automation from this blueprint, all battery control entities are **already created** by the ZenSync Lite integration. You do **not** need to create any helpers, template sensors, or input numbers for your battery:
+
+| Blueprint Input Field | Required? | What to select | Auto-created by ZenSync Lite? |
+|---|---|---|---|
+| **Grid Power Sensor** | **Yes** | Your household grid meter (e.g. Shelly 3EM, P1 DSMR, Tibber Pulse) | External meter |
+| **Battery Charge Limit Entity** | **Yes** | `number.<device>_charge_limit` | **Yes (Auto-created)** |
+| **Battery Output / Discharge Limit Entity** | **Yes** | `number.<device>_output_limit` | **Yes (Auto-created)** |
+| **Battery Operating Mode Entity** | **Yes** | `select.<device>_operating_mode` | **Yes (Auto-created)** |
+| **Battery State of Charge (SOC) Sensor** | **Yes** | `sensor.<device>_battery_soc` | **Yes (Auto-created)** |
+| **Moving Average Filtered Sensor** | *Optional* | Your Filter Helper sensor (if created) or leave blank | Optional |
+| **Enable Helper** | *Optional* | `input_boolean` or `switch` to toggle automation on/off | Optional |
+
+> [!TIP]
+> Each dropdown in the blueprint is filtered to `integration: zensync_lite`, so only the relevant entities belonging to your Zendure battery will appear in the selection list.
+
+### Stabilization Parameters:
 
 1. **`moving_average_sensor` (Optional Filter Sensor)**:
    - Point to your newly created `sensor.grid_power_45s_moving_average`.

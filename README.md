@@ -210,6 +210,9 @@ ZenSync Lite includes a solar surplus automation blueprint (`blueprints/automati
 - **SOC Protection Caps**: Enforces user-configured minimum SOC discharge cutoffs and target SOC charge caps.
 - **100% Opt-Out Support**: Filter window, cooldown, and step thresholds can all be set to `0` for instantaneous, raw reactive tracking.
 
+> [!NOTE]
+> All battery controls (Charge Limit, Output Limit, Operating Mode, Battery SOC) are **automatically created by ZenSync Lite**. When configuring the blueprint, simply select these existing entities from the dropdowns — you do not need to create any helpers or template entities.
+
 See [**docs/SURPLUS_MANAGEMENT.md**](docs/SURPLUS_MANAGEMENT.md) for full configuration details and step-by-step filter helper setup.
 
 ---

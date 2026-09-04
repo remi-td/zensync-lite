@@ -3,6 +3,9 @@ blueprint:
   description: >
     Dynamically balances household solar surplus with Zendure battery charge and discharge limits.
 
+    Simply map your Grid Power Sensor and your battery's entities (which are automatically created
+    by the ZenSync Lite integration — no helper creation required!).
+
     Features an optional Moving Average Filter and built-in rate-limiting cooldown and step hysteresis
     to eliminate inverter relay and MCU stress from rapid grid fluctuations (such as induction cooktop
     PWM pulses and passing clouds).
@@ -27,6 +30,43 @@ blueprint:
         entity:
           domain: sensor
           device_class: power
+    charge_limit_entity:
+      name: Battery Charge Limit Entity
+      description: >
+        The Charge Limit number entity provided by your battery (e.g. number.<battery_name>_charge_limit).
+        Automatically created by the ZenSync Lite integration — no new entity creation is needed.
+      selector:
+        entity:
+          domain: number
+          integration: zensync_lite
+    output_limit_entity:
+      name: Battery Output / Discharge Limit Entity
+      description: >
+        The Output Limit number entity provided by your battery (e.g. number.<battery_name>_output_limit).
+        Automatically created by the ZenSync Lite integration — no new entity creation is needed.
+      selector:
+        entity:
+          domain: number
+          integration: zensync_lite
+    mode_select_entity:
+      name: Battery Operating Mode Entity
+      description: >
+        The Operating Mode select entity provided by your battery (e.g. select.<battery_name>_operating_mode).
+        Automatically created by the ZenSync Lite integration — no new entity creation is needed.
+      selector:
+        entity:
+          domain: select
+          integration: zensync_lite
+    battery_soc_sensor:
+      name: Battery State of Charge (SOC) Sensor
+      description: >
+        The State of Charge sensor provided by your battery (e.g. sensor.<battery_name>_battery_soc).
+        Automatically created by the ZenSync Lite integration — no new entity creation is needed.
+      selector:
+        entity:
+          domain: sensor
+          device_class: battery
+          integration: zensync_lite
     sign_convention:
       name: Grid Sign Convention
       description: How your grid meter reports energy flow.
@@ -38,31 +78,6 @@ blueprint:
               value: "export_positive"
             - label: "Import is Positive (+500W means buying power from grid / deficit)"
               value: "import_positive"
-    battery_soc_sensor:
-      name: Battery SOC Sensor
-      description: Current state of charge sensor for the Zendure battery.
-      selector:
-        entity:
-          domain: sensor
-          device_class: battery
-    charge_limit_entity:
-      name: Charge Limit Entity
-      description: The number entity controlling battery charging limit (inputLimit).
-      selector:
-        entity:
-          domain: number
-    output_limit_entity:
-      name: Discharge / Output Limit Entity
-      description: The number entity controlling home output limit (outputLimit).
-      selector:
-        entity:
-          domain: number
-    mode_select_entity:
-      name: Operating Mode Entity
-      description: The select entity controlling inverter operating mode (acMode).
-      selector:
-        entity:
-          domain: select
     enable_switch:
       name: Enable Helper (Optional)
       description: Input boolean or switch to enable/disable automated surplus control.
@@ -157,6 +172,7 @@ variables:
   sign: !input sign_convention
   # Normalize: surplus > 0 is power sent to grid (export), surplus < 0 is deficit (import)
   surplus_power: "{{ raw_val if sign == 'export_positive' else -1.0 * raw_val }}"
+
   soc_entity: !input battery_soc_sensor
   current_soc: "{{ states(soc_entity) | int(50) }}"
   min_soc: !input minimum_soc
@@ -167,6 +183,7 @@ variables:
   max_charge: !input max_charge_watts
   max_discharge: !input max_discharge_watts
   enable_entity: !input enable_switch
+
   charge_entity: !input charge_limit_entity
   output_entity: !input output_limit_entity
   mode_entity: !input mode_select_entity
