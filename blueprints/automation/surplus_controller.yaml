@@ -1,13 +1,28 @@
 blueprint:
-  name: "Zendure Battery Solar Surplus Controller"
+  name: "ZenSync Lite: Solar Surplus Controller"
   description: >
-    Dynamically balances household grid surplus with Zendure battery charge and discharge limits.
-    Separates energy management strategy from the core device integration and prevents flash wear.
+    Dynamically balances household solar surplus with Zendure battery charge and discharge limits.
+
+    Features an optional Moving Average Filter and built-in rate-limiting cooldown and step hysteresis
+    to eliminate inverter relay and MCU stress from rapid grid fluctuations (such as induction cooktop
+    PWM pulses and passing clouds).
   domain: automation
   input:
     grid_power_sensor:
-      name: Grid Power Sensor
-      description: Sensor reporting home grid power in Watts.
+      name: Grid Power Sensor (Raw or Instantaneous)
+      description: Primary sensor reporting real-time home grid exchange in Watts (e.g. P1 port, Shelly 3EM).
+      selector:
+        entity:
+          domain: sensor
+          device_class: power
+    moving_average_sensor:
+      name: Moving Average Filtered Sensor (Optional)
+      description: >
+        Optional smoothed/filtered grid sensor (e.g. created via Settings > Devices & Services > Helpers > Filter
+        with a 30s–60s Time-based rolling mean). When provided, this moving average determines power setpoints
+        and mode decisions, completely filtering out short cooktop pulses and cloud chop.
+        Leave blank to use the raw Grid Power Sensor directly.
+      default: ""
       selector:
         entity:
           domain: sensor
@@ -77,7 +92,7 @@ blueprint:
           unit_of_measurement: "%"
     deadband_watts:
       name: Power Deadband (W)
-      description: Ignore grid power fluctuations smaller than this deadband to avoid chatter.
+      description: Ignore grid power fluctuations around 0W within this band to avoid direction hunting.
       default: 50
       selector:
         number:
@@ -85,6 +100,32 @@ blueprint:
           max: 200
           step: 10
           unit_of_measurement: W
+    min_change_watts:
+      name: Minimum Power Change Threshold (W)
+      description: >
+        Only adjust battery charge or discharge limits if the target power differs from the battery's
+        current active limit by at least this amount. Suppresses micro-adjustments (e.g. changing 410W to 418W).
+        Set to 0 to disable and adjust on every change.
+      default: 30
+      selector:
+        number:
+          min: 0
+          max: 150
+          step: 5
+          unit_of_measurement: W
+    update_interval_seconds:
+      name: Minimum Update Cooldown (seconds)
+      description: >
+        Minimum time to wait between consecutive battery power adjustments. Prevents the battery's
+        internal relays and DC-DC converters from being bombarded by rapid 1-second meter writes.
+        Set to 0 to disable cooldown and adjust immediately.
+      default: 15
+      selector:
+        number:
+          min: 0
+          max: 120
+          step: 5
+          unit_of_measurement: "s"
     max_charge_watts:
       name: Maximum Allowed Charge Power (W)
       default: 1200
@@ -109,19 +150,29 @@ trigger:
     entity_id: !input grid_power_sensor
 
 variables:
-  grid_entity: !input grid_power_sensor
-  raw_grid: "{{ states(grid_entity) | float(0) }}"
+  raw_sensor: !input grid_power_sensor
+  avg_sensor: !input moving_average_sensor
+  effective_sensor: "{{ avg_sensor if (avg_sensor != '' and states(avg_sensor) not in ['unknown', 'unavailable', 'none']) else raw_sensor }}"
+  raw_val: "{{ states(effective_sensor) | float(0) }}"
   sign: !input sign_convention
-  # Normalize so that surplus > 0 is power sent to grid, surplus < 0 is deficit/import from grid
-  surplus_power: "{{ raw_grid if sign == 'export_positive' else -1.0 * raw_grid }}"
+  # Normalize: surplus > 0 is power sent to grid (export), surplus < 0 is deficit (import)
+  surplus_power: "{{ raw_val if sign == 'export_positive' else -1.0 * raw_val }}"
   soc_entity: !input battery_soc_sensor
   current_soc: "{{ states(soc_entity) | int(50) }}"
   min_soc: !input minimum_soc
   max_soc: !input maximum_soc
   deadband: !input deadband_watts
+  min_change: !input min_change_watts
+  cooldown: !input update_interval_seconds
   max_charge: !input max_charge_watts
   max_discharge: !input max_discharge_watts
   enable_entity: !input enable_switch
+  charge_entity: !input charge_limit_entity
+  output_entity: !input output_limit_entity
+  mode_entity: !input mode_select_entity
+  current_mode: "{{ states(mode_entity) }}"
+  current_charge_limit: "{{ states(charge_entity) | int(0) }}"
+  current_output_limit: "{{ states(output_entity) | int(0) }}"
 
 condition:
   # Check if enable helper is turned on (if configured)
@@ -136,48 +187,86 @@ action:
           - condition: template
             value_template: "{{ surplus_power > deadband and current_soc < max_soc }}"
         sequence:
-          - service: select.select_option
-            target:
-              entity_id: !input mode_select_entity
-            data:
-              option: charge
-          - service: number.set_value
-            target:
-              entity_id: !input charge_limit_entity
-            data:
-              value: "{{ [surplus_power | int, max_charge] | min }}"
+          - variables:
+              target_charge: "{{ [surplus_power | int, max_charge] | min }}"
+              needs_update: "{{ current_mode != 'charge' or min_change == 0 or ((target_charge - current_charge_limit) | abs >= min_change) }}"
+          - if:
+              - condition: template
+                value_template: "{{ needs_update }}"
+            then:
+              - if:
+                  - condition: template
+                    value_template: "{{ current_mode != 'charge' }}"
+                then:
+                  - service: select.select_option
+                    target:
+                      entity_id: !input mode_select_entity
+                    data:
+                      option: charge
+              - service: number.set_value
+                target:
+                  entity_id: !input charge_limit_entity
+                data:
+                  value: "{{ target_charge }}"
 
       # Case 2: Deficit / Grid Import (surplus < -deadband) and battery above minimum SOC
       - conditions:
           - condition: template
             value_template: "{{ surplus_power < -1.0 * deadband and current_soc > min_soc }}"
         sequence:
-          - service: select.select_option
-            target:
-              entity_id: !input mode_select_entity
-            data:
-              option: discharge
-          - service: number.set_value
-            target:
-              entity_id: !input output_limit_entity
-            data:
-              value: "{{ [(-1.0 * surplus_power) | int, max_discharge] | min }}"
+          - variables:
+              target_discharge: "{{ [(-1.0 * surplus_power) | int, max_discharge] | min }}"
+              needs_update: "{{ current_mode != 'discharge' or min_change == 0 or ((target_discharge - current_output_limit) | abs >= min_change) }}"
+          - if:
+              - condition: template
+                value_template: "{{ needs_update }}"
+            then:
+              - if:
+                  - condition: template
+                    value_template: "{{ current_mode != 'discharge' }}"
+                then:
+                  - service: select.select_option
+                    target:
+                      entity_id: !input mode_select_entity
+                    data:
+                      option: discharge
+              - service: number.set_value
+                target:
+                  entity_id: !input output_limit_entity
+                data:
+                  value: "{{ target_discharge }}"
 
-      # Case 3: Battery full or below min SOC -> reduce limits safely
+      # Case 3: Battery full or below min SOC -> reduce limits safely to 0
       - conditions:
           - condition: template
             value_template: "{{ (current_soc >= max_soc and surplus_power > 0) or (current_soc <= min_soc and surplus_power < 0) }}"
         sequence:
-          - service: number.set_value
-            target:
-              entity_id: !input output_limit_entity
-            data:
-              value: 0
-          - service: number.set_value
-            target:
-              entity_id: !input charge_limit_entity
-            data:
-              value: 0
+          - if:
+              - condition: template
+                value_template: "{{ current_output_limit > 0 }}"
+            then:
+              - service: number.set_value
+                target:
+                  entity_id: !input output_limit_entity
+                data:
+                  value: 0
+          - if:
+              - condition: template
+                value_template: "{{ current_charge_limit > 0 }}"
+            then:
+              - service: number.set_value
+                target:
+                  entity_id: !input charge_limit_entity
+                data:
+                  value: 0
+
+  # Enforce cooldown delay to prevent rapid-fire write loops
+  - if:
+      - condition: template
+        value_template: "{{ cooldown > 0 }}"
+    then:
+      - delay:
+          seconds: "{{ cooldown }}"
 
 mode: single
 max_exceeded: silent

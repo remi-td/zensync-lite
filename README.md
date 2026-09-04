@@ -207,13 +207,14 @@ target:
 ZenSync Lite includes a solar surplus automation blueprint (`blueprints/automation/surplus_controller.yaml`).
 
 ### Features:
-- Automatically routes excess solar generation into battery charging.
-- Covers home load deficits during evening hours.
-- Respects custom deadbands (default `50W`) to prevent inverter relay hunting.
-- Enforces user-configured minimum SOC discharge cutoffs and target SOC charge caps.
-- Works with any smart meter (P1 / DSMR, Shelly 3EM, Tibber Pulse, Enphase).
+- **Optional Moving Average Filter**: Smooths out choppy solar data and high-frequency appliance spikes (e.g. induction cooktop pulses, passing clouds) using an optional 30s–60s rolling average sensor.
+- **Update Cooldown Rate-Limiting**: Configurable pause between inverter writes (default `15s`) to protect relay contacts and give MCU control loops time to settle.
+- **Minimum Step Hysteresis**: Prevents micro-adjustments by only writing if target power changes by at least `30W`.
+- **Zero-Crossing Deadband**: Ignores small grid fluctuations around 0W (default `50W`) to prevent rapid flipping between charge and discharge.
+- **SOC Protection Caps**: Enforces user-configured minimum SOC discharge cutoffs and target SOC charge caps.
+- **100% Opt-Out Support**: Filter window, cooldown, and step thresholds can all be set to `0` for instantaneous, raw reactive tracking.
 
-See [**docs/SURPLUS_MANAGEMENT.md**](docs/SURPLUS_MANAGEMENT.md) for full configuration details.
+See [**docs/SURPLUS_MANAGEMENT.md**](docs/SURPLUS_MANAGEMENT.md) for full configuration details and step-by-step filter helper setup.
 
 ---
 
