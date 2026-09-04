@@ -1,10 +1,6 @@
 # ZenSync Lite
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/home-assistant/brands/master/core_integrations/battery/icon.png" alt="ZenSync Lite Logo" width="100">
-</p>
-
-<p align="center">
   <strong>Fast, lean, and local-first Home Assistant integration for Zendure battery systems (SolarFlow series, Hyper 2000).</strong><br>
   <em>Reliable local control without cloud dependency, race conditions, or flash wear.</em>
 </p>
