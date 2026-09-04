@@ -10,6 +10,7 @@ from typing import Any
 from .const import (
     MAP_PACK_STATE,
     PROP_AC_MODE,
+    PROP_CHARGE_MAX_LIMIT,
     PROP_ELECTRIC_LEVEL,
     PROP_FAULT_LEVEL,
     PROP_GRID_INPUT_POWER,
@@ -18,6 +19,7 @@ from .const import (
     PROP_HEAT_STATE,
     PROP_HYPER_TMP,
     PROP_INPUT_LIMIT,
+    PROP_INVERSE_MAX_POWER,
     PROP_IS_ERROR,
     PROP_MIN_SOC,
     PROP_OUTPUT_HOME_POWER,
@@ -128,6 +130,8 @@ class ZendureBatteryState:
     ac_mode: int | None = None
     smart_mode: int | None = None
     grid_reverse: int | None = None
+    charge_max_limit_w: int | None = None
+    inverse_max_power_w: int | None = None
 
     # Environment & Diagnostics
     temperature_c: float | None = None
@@ -342,6 +346,8 @@ def parse_report_payload(
         ac_mode=ac_mode,
         smart_mode=smart_mode,
         grid_reverse=raw_props.get(PROP_GRID_REVERSE),
+        charge_max_limit_w=raw_props.get(PROP_CHARGE_MAX_LIMIT),
+        inverse_max_power_w=raw_props.get(PROP_INVERSE_MAX_POWER),
         temperature_c=temp_c,
         rssi_dbm=raw_props.get(PROP_RSSI),
         fault_level=raw_props.get(PROP_FAULT_LEVEL),

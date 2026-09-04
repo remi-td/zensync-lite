@@ -15,11 +15,22 @@ Your energy management strategy (dynamic tariffs, solar forecasts, home surplus 
 ## Key Highlights
 
 - **100% Local HTTP First**: Communicates directly over LAN with Zendure devices hosting the ZenSDK HTTP API (`GET /properties/report`, `POST /properties/write`). Zero cloud dependency for daily operation.
+- **Hardware-Verified**: Live-tested and verified with physical hardware (**SolarFlow 2400 AC+**, serial `HEC4NENCN490106`).
 - **No Flash Wear (`smartMode`)**: Frequent automation writes (e.g. surplus regulation) write to volatile MCU memory by default (`smartMode: 1`), preventing NAND flash degradation.
-- **Strict Write Confirmation**: Control entities reflect confirmed device state from readback verification, never optimistic requested state.
+- **Strict Write Confirmation**: Control entities reflect confirmed device state from readback verification with multi-attempt grace window, never optimistic requested state.
 - **Robust Multi-Device Support**: Unique IDs incorporate hardware serial numbers (`zendure_local_<serial>_<property>`), completely preventing entity collisions for multiple identical units.
+- **Dynamic Limit Clamping**: Automatically adapts slider maximums to physical inverter ratings (`chargeMaxLimit: 2400W`, `inverseMaxPower: 900W`).
 - **Stale & Offline Resilience**: Device dropouts do not wipe out last-known SOC or user settings. Retries use exponential backoff, and IP address changes trigger automatic rediscovery.
 - **Solar Surplus Controller Blueprint**: Ships with an automation blueprint to dynamically balance home surplus with battery charge/discharge limits.
+
+---
+
+## Documentation Index
+
+- [Architecture & Safety Design](docs/ARCHITECTURE.md): Deep dive into ZenSDK HTTP API, MCU volatile writes, transaction manager, and data normalization.
+- [Setup & Installation Guide](docs/SETUP_GUIDE.md): Step-by-step setup, EN 18031 HEMS mode enablement, mDNS discovery, and Docker sandbox.
+- [Entities & Actions Reference](docs/ENTITIES_AND_SERVICES.md): Comprehensive catalog of all sensors, binary sensors, numbers, selects, switches, buttons, and services.
+- [Solar Surplus Management Guide](docs/SURPLUS_MANAGEMENT.md): How to use the included blueprint with home smart meters (P1, Shelly 3EM, Tibber Pulse).
 
 ---
 

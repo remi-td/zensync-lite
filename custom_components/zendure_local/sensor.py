@@ -29,47 +29,21 @@ try:
     from homeassistant.helpers.entity import EntityCategory
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 except ImportError:
-    # Standalone mock for unit testing
-    class SensorEntity:  # type: ignore
-        """Mock SensorEntity."""
-        _attr_native_value = None
-
-    @dataclass(frozen=True)
-    class SensorEntityDescription:  # type: ignore
-        """Mock SensorEntityDescription."""
-        key: str
-        name: str | None = None
-        native_unit_of_measurement: str | None = None
-        device_class: Any = None
-        state_class: Any = None
-        entity_category: Any = None
-        entity_registry_enabled_default: bool = True
-
-    class SensorDeviceClass:  # type: ignore
-        BATTERY = "battery"
-        POWER = "power"
-        TEMPERATURE = "temperature"
-        VOLTAGE = "voltage"
-        CURRENT = "current"
-        TIMESTAMP = "timestamp"
-        SIGNAL_STRENGTH = "signal_strength"
-        ENUM = "enum"
-
-    class SensorStateClass:  # type: ignore
-        MEASUREMENT = "measurement"
-        TOTAL = "total"
-        TOTAL_INCREASING = "total_increasing"
-
-    class EntityCategory:  # type: ignore
-        DIAGNOSTIC = "diagnostic"
-        CONFIG = "config"
-
-    PERCENTAGE = "%"
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT = "dBm"
-    UnitOfPower = type("UnitOfPower", (), {"WATT": "W"})  # type: ignore
-    UnitOfTemperature = type("UnitOfTemperature", (), {"CELSIUS": "°C"})  # type: ignore
-    UnitOfElectricPotential = type("UnitOfElectricPotential", (), {"VOLT": "V"})  # type: ignore
-    UnitOfElectricCurrent = type("UnitOfElectricCurrent", (), {"AMPERE": "A"})  # type: ignore
+    from .compat import (  # type: ignore[no-redef]
+        PERCENTAGE,
+        SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        ConfigEntry,
+        EntityCategory,
+        HomeAssistant,
+        SensorDeviceClass,
+        SensorEntity,
+        SensorEntityDescription,
+        SensorStateClass,
+        UnitOfElectricCurrent,
+        UnitOfElectricPotential,
+        UnitOfPower,
+        UnitOfTemperature,
+    )
     UnitOfTime = type("UnitOfTime", (), {"MINUTES": "min"})  # type: ignore
 
 from .const import DOMAIN

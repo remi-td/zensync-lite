@@ -13,7 +13,9 @@ DEFAULT_TIMEOUT_READ = 5.0     # seconds
 DEFAULT_MAX_RETRIES = 2
 DEFAULT_POLL_INTERVAL = 10     # seconds
 STALE_THRESHOLD_INTERVALS = 3  # missed intervals before marking stale
-CONFIRMATION_DELAY = 0.8       # seconds delay before readback check
+CONFIRMATION_DELAY = 1.0       # seconds initial delay before readback check
+CONFIRMATION_RETRIES = 3       # max readback confirmation attempts
+CONFIRMATION_RETRY_DELAY = 1.5 # delay between confirmation attempts
 
 # Config keys
 CONF_HOST = "host"
@@ -87,11 +89,13 @@ PROP_RSSI = "rssi"
 PROP_HEAT_STATE = "heatState"
 PROP_IS_ERROR = "is_error"
 PROP_FAULT_LEVEL = "faultLevel"
+PROP_DRY_NODE_STATE = "dryNodeState"
+PROP_CHARGE_MAX_LIMIT = "chargeMaxLimit"
+PROP_INVERSE_MAX_POWER = "inverseMaxPower"
 PROP_GRID_STATE = "gridState"
 PROP_REVERSE_STATE = "reverseState"
 PROP_HYPER_TMP = "hyperTmp"
 PROP_PASS = "pass"
-PROP_INVERSE_MAX_POWER = "inverseMaxPower"
 
 # Services
 SERVICE_SET_CHARGE_LIMIT = "set_charge_limit"

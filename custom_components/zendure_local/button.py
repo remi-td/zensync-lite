@@ -13,24 +13,13 @@ try:
     from homeassistant.helpers.entity import EntityCategory
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 except ImportError:
-    class ButtonEntity:  # type: ignore
-        """Mock ButtonEntity."""
-        pass
-
-    @dataclass(frozen=True)
-    class ButtonEntityDescription:  # type: ignore
-        """Mock ButtonEntityDescription."""
-        key: str
-        name: str | None = None
-        device_class: Any = None
-        entity_category: Any = None
-
-    class ButtonDeviceClass:  # type: ignore
-        UPDATE = "update"
-        RESTART = "restart"
-
-    class EntityCategory:  # type: ignore
-        DIAGNOSTIC = "diagnostic"
+    from .compat import (  # type: ignore[no-redef]
+        ButtonEntity,
+        ButtonEntityDescription,
+        EntityCategory,
+        HomeAssistant,
+    )
+    ButtonDeviceClass = type("ButtonDeviceClass", (), {"UPDATE": "update", "RESTART": "restart"})  # type: ignore
 
 from .const import DOMAIN
 from .coordinator import ZendureCoordinator

@@ -10,17 +10,7 @@ try:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 except ImportError:
-    class SelectEntity:  # type: ignore
-        """Mock SelectEntity."""
-        _attr_current_option = None
-        _attr_options = []
-
-    class SelectEntityDescription:  # type: ignore
-        """Mock SelectEntityDescription."""
-        def __init__(self, key: str, name: str | None = None, options: list[str] | None = None) -> None:
-            self.key = key
-            self.name = name
-            self.options = options or []
+    from .compat import HomeAssistant, SelectEntity, SelectEntityDescription  # type: ignore[no-redef]
 
 from .const import (
     DOMAIN,

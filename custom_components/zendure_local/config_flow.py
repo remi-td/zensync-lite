@@ -26,55 +26,15 @@ try:
     except ImportError:
         from homeassistant.data_entry_flow import FlowResult  # type: ignore
 except ImportError:
-    # Standalone mock for unit testing
-    class FlowResult(dict):  # type: ignore
-        pass
-
-    class config_entries:  # type: ignore
-        class ConfigFlow:
-            def __init_subclass__(cls, domain: str = "", **kwargs: Any) -> None:
-                super().__init_subclass__(**kwargs)
-                cls.domain = domain
-
-            def __init__(self) -> None:
-                self.context: dict[str, Any] = {}
-                self._unique_id: str | None = None
-
-            async def async_set_unique_id(self, unique_id: str) -> None:
-                self._unique_id = unique_id
-
-            def _abort_if_unique_id_configured(self, updates: dict[str, Any] | None = None) -> None:
-                pass
-
-            def async_show_form(self, **kwargs: Any) -> FlowResult:
-                return FlowResult({"type": "form", **kwargs})
-
-            def async_create_entry(self, **kwargs: Any) -> FlowResult:
-                return FlowResult({"type": "create_entry", **kwargs})
-
-            def async_abort(self, **kwargs: Any) -> FlowResult:
-                return FlowResult({"type": "abort", **kwargs})
-
-        class OptionsFlow:
-            def __init__(self, config_entry: Any) -> None:
-                self.config_entry = config_entry
-
-            def async_show_form(self, **kwargs: Any) -> FlowResult:
-                return FlowResult({"type": "form", **kwargs})
-
-            def async_create_entry(self, **kwargs: Any) -> FlowResult:
-                return FlowResult({"type": "create_entry", **kwargs})
-
-    class ZeroconfServiceInfo:  # type: ignore
-        host: str = ""
-        port: int = 80
-        name: str = ""
-        properties: dict[str, Any] = {}
-
-    CONF_HOST = "host"
-    CONF_PORT = "port"
-    callback = lambda f: f
     vol = type("vol", (), {"Schema": lambda s: s, "Optional": lambda k, **kw: k, "Required": lambda k, **kw: k, "All": lambda *a: a, "Range": lambda **kw: kw, "In": lambda a: a})  # type: ignore
+    from .compat import (  # type: ignore[no-redef]
+        CONF_HOST,
+        CONF_PORT,
+        FlowResult,
+        ZeroconfServiceInfo,
+        callback,
+        config_entries,
+    )
 
 from .capabilities import get_device_capability
 from .const import (

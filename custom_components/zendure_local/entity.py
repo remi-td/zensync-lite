@@ -4,22 +4,11 @@ from __future__ import annotations
 
 from typing import Any, Generic, TypeVar
 
-_T = TypeVar("_T")
-
 try:
     from homeassistant.helpers.device_registry import DeviceInfo
     from homeassistant.helpers.update_coordinator import CoordinatorEntity
 except ImportError:
-    class CoordinatorEntity(Generic[_T]):  # type: ignore
-        """Mock CoordinatorEntity for standalone testing."""
-        def __init__(self, coordinator: Any) -> None:
-            self.coordinator = coordinator
-            self.hass = getattr(coordinator, "hass", None)
-
-    class DeviceInfo(dict):  # type: ignore
-        """Mock DeviceInfo for testing."""
-        def __init__(self, **kwargs: Any) -> None:
-            super().__init__(**kwargs)
+    from .compat import CoordinatorEntity, DeviceInfo  # type: ignore[no-redef]
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import ZendureCoordinator

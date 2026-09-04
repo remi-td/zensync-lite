@@ -11,22 +11,14 @@ try:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.aiohttp_client import async_get_clientsession
 except ImportError:
-    # Standalone mock for unit testing
-    ConfigEntry = Any  # type: ignore
-    HomeAssistant = Any  # type: ignore
-    CONF_HOST = "host"
-    CONF_PORT = "port"
-
-    class Platform:  # type: ignore
-        SENSOR = "sensor"
-        BINARY_SENSOR = "binary_sensor"
-        NUMBER = "number"
-        SELECT = "select"
-        SWITCH = "switch"
-        BUTTON = "button"
-
-    def async_get_clientsession(hass: Any) -> Any:
-        return None
+    from .compat import (  # type: ignore[no-redef]
+        CONF_HOST,
+        CONF_PORT,
+        ConfigEntry,
+        HomeAssistant,
+        Platform,
+        async_get_clientsession,
+    )
 
 from .const import (
     CONF_MODEL,

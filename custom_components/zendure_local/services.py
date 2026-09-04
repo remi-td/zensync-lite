@@ -12,11 +12,10 @@ try:
     from homeassistant.helpers import device_registry as dr
     from homeassistant.helpers import entity_registry as er
 except ImportError:
-    # Standalone mock for unit testing
     vol = type("vol", (), {"Schema": lambda s: s, "Optional": lambda k, **kw: k, "Required": lambda k, **kw: k, "All": lambda *a: a, "Range": lambda **kw: kw, "In": lambda a: a})  # type: ignore
     cv = type("cv", (), {"string": str, "positive_int": int, "boolean": bool})  # type: ignore
     ServiceCall = Any  # type: ignore
-    HomeAssistant = Any  # type: ignore
+    from .compat import HomeAssistant  # type: ignore[no-redef]
 
 from .const import (
     AC_MODE_CHARGE,

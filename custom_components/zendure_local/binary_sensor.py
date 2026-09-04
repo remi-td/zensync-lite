@@ -17,27 +17,13 @@ try:
     from homeassistant.helpers.entity import EntityCategory
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 except ImportError:
-    class BinarySensorEntity:  # type: ignore
-        """Mock BinarySensorEntity."""
-        _attr_is_on = None
-
-    @dataclass(frozen=True)
-    class BinarySensorEntityDescription:  # type: ignore
-        """Mock BinarySensorEntityDescription."""
-        key: str
-        name: str | None = None
-        device_class: Any = None
-        entity_category: Any = None
-        entity_registry_enabled_default: bool = True
-
-    class BinarySensorDeviceClass:  # type: ignore
-        CONNECTIVITY = "connectivity"
-        PROBLEM = "problem"
-        HEAT = "heat"
-        RUNNING = "running"
-
-    class EntityCategory:  # type: ignore
-        DIAGNOSTIC = "diagnostic"
+    from .compat import (  # type: ignore[no-redef]
+        BinarySensorDeviceClass,
+        BinarySensorEntity,
+        BinarySensorEntityDescription,
+        EntityCategory,
+        HomeAssistant,
+    )
 
 from .const import DOMAIN, TRANSPORT_LOCAL_HTTP
 from .coordinator import ZendureCoordinator

@@ -13,49 +13,13 @@ try:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 except ImportError:
-    # Fallback minimal implementation for standalone unit testing without full HA core
-    class HomeAssistant:  # type: ignore
-        """Mock HomeAssistant for testing."""
-        def __init__(self) -> None:
-            self.loop = asyncio.get_event_loop()
-
-    class DataUpdateCoordinator(Generic[_T]):  # type: ignore
-        """Mock DataUpdateCoordinator for testing."""
-        def __init__(self, hass: Any, logger: Any, name: str, update_interval: Any) -> None:
-            self.hass = hass
-            self.logger = logger
-            self.name = name
-            self.update_interval = update_interval
-            self.data: Any = None
-            self.last_update_success: bool = True
-            self._listeners: list[Callable[[], None]] = []
-
-        def async_add_listener(self, update_callback: Callable[[], None]) -> Callable[[], None]:
-            self._listeners.append(update_callback)
-            return lambda: self._listeners.remove(update_callback)
-
-        def async_update_listeners(self) -> None:
-            for listener in self._listeners:
-                listener()
-
-        async def async_request_refresh(self) -> None:
-            """Request a refresh."""
-            try:
-                self.data = await self._async_update_data()
-                self.last_update_success = True
-            except Exception:
-                self.last_update_success = False
-            self.async_update_listeners()
-
-        async def _async_update_data(self) -> Any:
-            raise NotImplementedError
-
-    class UpdateFailed(Exception):  # type: ignore
-        """Mock UpdateFailed exception."""
+    from .compat import DataUpdateCoordinator, HomeAssistant, UpdateFailed  # type: ignore[no-redef]
 
 from .capabilities import DeviceCapability, get_device_capability
 from .const import (
     CONFIRMATION_DELAY,
+    CONFIRMATION_RETRIES,
+    CONFIRMATION_RETRY_DELAY,
     DEFAULT_POLL_INTERVAL,
     DOMAIN,
     PROP_AC_MODE,
@@ -119,6 +83,7 @@ class ZendureCoordinator(DataUpdateCoordinator[ZendureBatteryState]):
         # State tracking
         self.consecutive_failed_polls: int = 0
         self._cached_state: ZendureBatteryState | None = None
+        self._soc_factor_10: bool = False
 
     @property
     def current_state(self) -> ZendureBatteryState | None:
@@ -136,6 +101,19 @@ class ZendureCoordinator(DataUpdateCoordinator[ZendureBatteryState]):
             if reported_model and reported_model != self.model:
                 self.model = reported_model
                 self.capability = get_device_capability(reported_model)
+
+            # Check if device uses tenths-of-a-percent (factor 10) for SOC limits
+            raw_props = raw_payload.get("properties") or {}
+            if isinstance(raw_props, dict):
+                raw_soc_set = raw_props.get(PROP_SOC_SET)
+                raw_min_soc = raw_props.get(PROP_MIN_SOC)
+                try:
+                    if (raw_soc_set is not None and int(raw_soc_set) > 100) or (
+                        raw_min_soc is not None and int(raw_min_soc) > 50
+                    ):
+                        self._soc_factor_10 = True
+                except (ValueError, TypeError):
+                    pass
 
             state = parse_report_payload(
                 payload=raw_payload,
@@ -216,6 +194,13 @@ class ZendureCoordinator(DataUpdateCoordinator[ZendureBatteryState]):
                 self.async_update_listeners()
             return False
 
+        # Scale SOC limits if device expects factor 10
+        if self._soc_factor_10:
+            if PROP_SOC_SET in properties and properties[PROP_SOC_SET] <= 100:
+                properties[PROP_SOC_SET] = int(properties[PROP_SOC_SET] * 10)
+            if PROP_MIN_SOC in properties and properties[PROP_MIN_SOC] <= 50:
+                properties[PROP_MIN_SOC] = int(properties[PROP_MIN_SOC] * 10)
+
         # 2. Suppress identical redundant writes within 2.0s debounce window
         loop = getattr(self.hass, "loop", None)
         now_ts = loop.time() if loop else asyncio.get_event_loop().time()
@@ -264,42 +249,63 @@ class ZendureCoordinator(DataUpdateCoordinator[ZendureBatteryState]):
                 self._update_transaction_state_in_cache()
                 return True
 
-            # 5. Readback confirmation
-            await asyncio.sleep(CONFIRMATION_DELAY)
-            try:
-                confirmed_state = await self._async_update_data()
-                self.data = confirmed_state
+            # 5. Readback confirmation with retry grace window
+            confirmed = False
+            mismatches = []
+            max_attempts = CONFIRMATION_RETRIES
 
-                # Check if written properties match reported device truth
-                confirmed = True
-                mismatches = []
-                for prop_name, expected_val in properties.items():
-                    if prop_name == PROP_SMART_MODE:
-                        continue  # smartMode may not always be reflected directly in readback properties
-                    actual_val = confirmed_state.raw_properties.get(prop_name)
-                    if actual_val is not None and actual_val != expected_val:
-                        confirmed = False
-                        mismatches.append(f"{prop_name}: expected {expected_val}, got {actual_val}")
+            for attempt in range(1, max_attempts + 1):
+                delay = CONFIRMATION_DELAY if attempt == 1 else CONFIRMATION_RETRY_DELAY
+                await asyncio.sleep(delay)
+                try:
+                    confirmed_state = await self._async_update_data()
+                    self.data = confirmed_state
 
-                if confirmed:
-                    self.transaction_state = TRANSACTION_CONFIRMED
-                    self.last_transaction_detail = f"Confirmed {list(properties.keys())}"
-                    _LOGGER.debug("Transaction confirmed for %s: %s", self.serial, properties)
-                else:
-                    self.transaction_state = TRANSACTION_FAILED
-                    self.last_transaction_detail = f"Confirmation mismatch: {', '.join(mismatches)}"
-                    _LOGGER.warning("Transaction confirmation failed for %s: %s", self.serial, self.last_transaction_detail)
+                    # Check if written properties match reported device truth
+                    confirmed = True
+                    mismatches = []
+                    for prop_name, expected_val in properties.items():
+                        if prop_name == PROP_SMART_MODE:
+                            continue  # smartMode may not always be reflected directly in readback properties
+                        actual_val = confirmed_state.raw_properties.get(prop_name)
+                        if actual_val is None:
+                            continue
 
-                self._update_transaction_state_in_cache()
-                self.async_update_listeners()
-                return confirmed
+                        # Check exact match or factor 10 match for SOC limits
+                        match = (actual_val == expected_val)
+                        if not match and prop_name in (PROP_SOC_SET, PROP_MIN_SOC):
+                            match = (actual_val == expected_val * 10) or (actual_val * 10 == expected_val)
 
-            except Exception as err:
+                        if not match:
+                            confirmed = False
+                            mismatches.append(f"{prop_name}: expected {expected_val}, got {actual_val}")
+                            break
+
+                    if confirmed:
+                        _LOGGER.debug("Transaction confirmed on attempt %d for %s", attempt, self.serial)
+                        break
+
+                except Exception as err:
+                    _LOGGER.debug("Confirmation poll attempt %d failed for %s: %s", attempt, self.serial, err)
+                    if attempt == max_attempts:
+                        self.transaction_state = TRANSACTION_FAILED
+                        self.last_transaction_detail = f"Readback check failed: {err}"
+                        _LOGGER.warning("Failed during readback confirmation for %s: %s", self.serial, err)
+                        self._update_transaction_state_in_cache()
+                        return False
+
+            if confirmed:
+                self.transaction_state = TRANSACTION_CONFIRMED
+                self.last_transaction_detail = f"Confirmed {list(properties.keys())}"
+                _LOGGER.debug("Transaction confirmed for %s: %s", self.serial, properties)
+            else:
                 self.transaction_state = TRANSACTION_FAILED
-                self.last_transaction_detail = f"Readback check failed: {err}"
-                _LOGGER.warning("Failed during readback confirmation for %s: %s", self.serial, err)
-                self._update_transaction_state_in_cache()
-                return False
+                self.last_transaction_detail = f"Confirmation mismatch: {', '.join(mismatches)}"
+                _LOGGER.warning("Transaction confirmation failed for %s: %s", self.serial, self.last_transaction_detail)
+
+            self._update_transaction_state_in_cache()
+            self.async_update_listeners()
+            return confirmed
 
     def _update_transaction_state_in_cache(self) -> None:
         """Sync transaction state to cached state."""

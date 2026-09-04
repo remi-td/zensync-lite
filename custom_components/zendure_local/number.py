@@ -18,32 +18,15 @@ try:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 except ImportError:
-    class NumberEntity:  # type: ignore
-        """Mock NumberEntity."""
-        _attr_native_value = None
-
-    @dataclass(frozen=True)
-    class NumberEntityDescription:  # type: ignore
-        """Mock NumberEntityDescription."""
-        key: str
-        name: str | None = None
-        native_unit_of_measurement: str | None = None
-        device_class: Any = None
-        native_min_value: float = 0
-        native_max_value: float = 100
-        native_step: float = 1
-        mode: Any = "box"
-
-    class NumberDeviceClass:  # type: ignore
-        POWER = "power"
-        BATTERY = "battery"
-
-    class NumberMode:  # type: ignore
-        BOX = "box"
-        SLIDER = "slider"
-
-    PERCENTAGE = "%"
-    UnitOfPower = type("UnitOfPower", (), {"WATT": "W"})  # type: ignore
+    from .compat import (  # type: ignore[no-redef]
+        PERCENTAGE,
+        HomeAssistant,
+        NumberDeviceClass,
+        NumberEntity,
+        NumberEntityDescription,
+        NumberMode,
+        UnitOfPower,
+    )
 
 from .const import (
     DOMAIN,
@@ -80,7 +63,7 @@ NUMBER_DESCRIPTIONS: tuple[ZendureNumberEntityDescription, ...] = (
         native_step=10,
         mode=NumberMode.BOX,
         value_fn=lambda s: s.input_limit_w,
-        max_value_fn=lambda c: float(c.capability.max_charge_w),
+        max_value_fn=lambda c: float(c.current_state.charge_max_limit_w if c.current_state and c.current_state.charge_max_limit_w else c.capability.max_charge_w),
     ),
     ZendureNumberEntityDescription(
         key="output_limit_setting",
@@ -93,7 +76,7 @@ NUMBER_DESCRIPTIONS: tuple[ZendureNumberEntityDescription, ...] = (
         native_step=10,
         mode=NumberMode.BOX,
         value_fn=lambda s: s.output_limit_w,
-        max_value_fn=lambda c: float(c.capability.max_discharge_w),
+        max_value_fn=lambda c: float(c.current_state.inverse_max_power_w if c.current_state and c.current_state.inverse_max_power_w else c.capability.max_discharge_w),
     ),
     ZendureNumberEntityDescription(
         key="target_soc_setting",

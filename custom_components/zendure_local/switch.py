@@ -11,15 +11,12 @@ try:
     from homeassistant.helpers.entity import EntityCategory
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 except ImportError:
-    class SwitchEntity:  # type: ignore
-        """Mock SwitchEntity."""
-        _attr_is_on = None
-
-    class SwitchDeviceClass:  # type: ignore
-        SWITCH = "switch"
-
-    class EntityCategory:  # type: ignore
-        CONFIG = "config"
+    from .compat import (  # type: ignore[no-redef]
+        EntityCategory,
+        HomeAssistant,
+        SwitchEntity,
+    )
+    SwitchDeviceClass = type("SwitchDeviceClass", (), {"SWITCH": "switch"})  # type: ignore
 
 from .const import DOMAIN, PROP_GRID_REVERSE, PROP_SMART_MODE
 from .coordinator import ZendureCoordinator

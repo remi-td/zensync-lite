@@ -5,8 +5,10 @@ import pytest
 
 from custom_components.zendure_local.const import (
     PROP_AC_MODE,
+    PROP_MIN_SOC,
     PROP_OUTPUT_LIMIT,
     PROP_SMART_MODE,
+    PROP_SOC_SET,
     TRANSACTION_CONFIRMED,
     TRANSACTION_FAILED,
 )
@@ -187,5 +189,38 @@ async def test_coordinator_stale_threshold_and_state_preservation(mock_zendure_s
         assert state3.soc_percent == 85
         assert state3.input_limit_w == 800
         assert state3.output_limit_w == 600
+    finally:
+        await coordinator.async_close()
+
+
+@pytest.mark.asyncio
+async def test_coordinator_confirmation_retry_and_factor10(mock_zendure_server):
+    """Test that confirmation retries until device updates state and scales factor 10."""
+    hass = DummyHass()
+    transport = LocalHttpTransport(
+        serial="SF2400A10001",
+        host="127.0.0.1",
+        port=mock_zendure_server.port,
+    )
+    coordinator = ZendureCoordinator(
+        hass=hass,
+        transport=transport,
+        serial="SF2400A10001",
+        model="SolarFlow2400 AC",
+    )
+    try:
+        # Initial poll reports socSet: 1000, minSoc: 100
+        mock_zendure_server.report_data["properties"]["socSet"] = 1000
+        mock_zendure_server.report_data["properties"]["minSoc"] = 100
+        await coordinator._async_update_data()
+        assert coordinator._soc_factor_10 is True
+
+        # Write socSet 90% (should scale to 900)
+        success = await coordinator.async_execute_write({PROP_SOC_SET: 90})
+        assert success is True
+        assert coordinator.transaction_state == TRANSACTION_CONFIRMED
+        # Device received 900
+        assert mock_zendure_server.last_write["properties"]["socSet"] == 900
+
     finally:
         await coordinator.async_close()
