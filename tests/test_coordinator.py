@@ -3,7 +3,7 @@
 import asyncio
 import pytest
 
-from custom_components.zendure_local.const import (
+from custom_components.zensync_lite.const import (
     PROP_AC_MODE,
     PROP_MIN_SOC,
     PROP_OUTPUT_LIMIT,
@@ -12,8 +12,8 @@ from custom_components.zendure_local.const import (
     TRANSACTION_CONFIRMED,
     TRANSACTION_FAILED,
 )
-from custom_components.zendure_local.coordinator import ZendureCoordinator
-from custom_components.zendure_local.transport.local_http import LocalHttpTransport
+from custom_components.zensync_lite.coordinator import ZendureCoordinator
+from custom_components.zensync_lite.transport.local_http import LocalHttpTransport
 
 
 class DummyHass:

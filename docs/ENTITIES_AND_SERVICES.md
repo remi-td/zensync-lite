@@ -1,6 +1,6 @@
-# Zendure Local Battery Control: Entities & Actions Reference
+# ZenSync Lite: Entities & Actions Reference
 
-Complete catalog of all entities, device classes, state mappings, and actions exposed by `zendure_local`.
+Complete catalog of all entities, device classes, state mappings, and actions exposed by `zensync_lite`.
 
 ---
 
@@ -87,40 +87,40 @@ Complete catalog of all entities, device classes, state mappings, and actions ex
 
 ## 4. Integration Actions / Services
 
-### `zendure_local.set_charge_limit`
+### `zensync_lite.set_charge_limit`
 Sets the AC grid charging power limit.
 ```yaml
-action: zendure_local.set_charge_limit
+action: zensync_lite.set_charge_limit
 target:
   device_id: 1e66e7c0507884301d75c748a97f16bf
 data:
   limit: 800  # Watts
 ```
 
-### `zendure_local.set_output_limit`
+### `zensync_lite.set_output_limit`
 Sets the home output discharge power limit.
 ```yaml
-action: zendure_local.set_output_limit
+action: zensync_lite.set_output_limit
 target:
   device_id: 1e66e7c0507884301d75c748a97f16bf
 data:
   limit: 300  # Watts
 ```
 
-### `zendure_local.set_mode`
+### `zensync_lite.set_mode`
 Switches inverter operating mode.
 ```yaml
-action: zendure_local.set_mode
+action: zensync_lite.set_mode
 target:
   device_id: 1e66e7c0507884301d75c748a97f16bf
 data:
   mode: "charge"  # or "discharge"
 ```
 
-### `zendure_local.set_soc_limits`
+### `zensync_lite.set_soc_limits`
 Configures battery SOC operating bounds simultaneously.
 ```yaml
-action: zendure_local.set_soc_limits
+action: zensync_lite.set_soc_limits
 target:
   device_id: 1e66e7c0507884301d75c748a97f16bf
 data:
@@ -128,26 +128,26 @@ data:
   target_soc: 95  # %
 ```
 
-### `zendure_local.stop_output`
+### `zensync_lite.stop_output`
 Immediately stops home discharge by setting the output limit to 0W.
 ```yaml
-action: zendure_local.stop_output
+action: zensync_lite.stop_output
 target:
   device_id: 1e66e7c0507884301d75c748a97f16bf
 ```
 
-### `zendure_local.refresh`
+### `zensync_lite.refresh`
 Requests an immediate data refresh from the battery.
 ```yaml
-action: zendure_local.refresh
+action: zensync_lite.refresh
 target:
   device_id: 1e66e7c0507884301d75c748a97f16bf
 ```
 
-### `zendure_local.rediscover`
+### `zensync_lite.rediscover`
 Initiates background mDNS rediscovery to resolve updated device IP endpoints.
 ```yaml
-action: zendure_local.rediscover
+action: zensync_lite.rediscover
 target:
   device_id: 1e66e7c0507884301d75c748a97f16bf
 ```

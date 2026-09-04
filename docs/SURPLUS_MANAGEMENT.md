@@ -1,4 +1,4 @@
-# Zendure Local Battery Control: Solar Surplus Management Guide
+# ZenSync Lite: Solar Surplus Management Guide
 
 This guide explains how to dynamically balance home solar surplus and home load deficits using the included **Surplus Controller Blueprint**.
 
@@ -23,14 +23,14 @@ This guide explains how to dynamically balance home solar surplus and home load 
                                |
                                v
         +------------------------------------------------+
-        | zendure_local Integration                      |
+        | zensync_lite Integration                      |
         | - Executes writes in RAM (smartMode: 1)        |
         | - Protects battery health with SOC cutoffs     |
         | - Confirms state transition on physical device |
         +------------------------------------------------+
 ```
 
-Because `zendure_local` does not embed an internal energy manager, you are free to customize your energy strategy using standard Home Assistant tools:
+Because `zensync_lite` does not embed an internal energy manager, you are free to customize your energy strategy using standard Home Assistant tools:
 - **Solar Surplus Charging**: Store excess rooftop generation instead of exporting to grid at low feed-in tariffs.
 - **Peak Shaving**: Discharge battery during high household consumption.
 - **Dynamic Tariff Arbitrage**: Charge from grid during negative or cheap tariff hours (Nordpool, Tibber) and discharge during peak prices.
@@ -80,7 +80,7 @@ The blueprint is located at [`blueprints/automation/surplus_controller.yaml`](fi
 ## 4. Flash Wear Immunity
 
 When the automation updates the `inputLimit` or `outputLimit` numbers:
-- `zendure_local` automatically writes to volatile MCU memory (`smartMode: 1`).
+- `zensync_lite` automatically writes to volatile MCU memory (`smartMode: 1`).
 - The automation can adjust limits every 15–30 seconds safely without degrading the battery's flash memory.
 
 ---
@@ -101,12 +101,12 @@ condition:
     entity_id: sensor.zendure_solarflow2400ac_hec4nencn490106_battery_soc
     below: 90
 action:
-  - action: zendure_local.set_mode
+  - action: zensync_lite.set_mode
     target:
       device_id: 1e66e7c0507884301d75c748a97f16bf
     data:
       mode: "charge"
-  - action: zendure_local.set_charge_limit
+  - action: zensync_lite.set_charge_limit
     target:
       device_id: 1e66e7c0507884301d75c748a97f16bf
     data:

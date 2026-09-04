@@ -15,4 +15,4 @@ http:
 logger:
   default: info
   logs:
-    custom_components.zendure_local: debug
+    custom_components.zensync_lite: debug

@@ -58,7 +58,7 @@ class ConfigEntry:
     def __init__(
         self,
         entry_id: str = "mock_entry_id",
-        domain: str = "zendure_local",
+        domain: str = "zensync_lite",
         title: str = "Mock Zendure",
         data: dict[str, Any] | None = None,
         options: dict[str, Any] | None = None,

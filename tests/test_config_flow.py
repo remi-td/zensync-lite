@@ -2,13 +2,13 @@
 
 import pytest
 
-from custom_components.zendure_local.config_flow import (
+from custom_components.zensync_lite.config_flow import (
     ZeroconfServiceInfo,
     ZendureConfigFlow,
     _extract_model_from_name,
     _extract_serial_from_name,
 )
-from custom_components.zendure_local.const import (
+from custom_components.zensync_lite.const import (
     CONF_HOST,
     CONF_MODEL,
     CONF_PORT,

@@ -1,0 +1,17 @@
+{
+  "domain": "zensync_lite",
+  "name": "ZenSync Lite",
+  "codeowners": ["@remi-td"],
+  "config_flow": true,
+  "documentation": "https://github.com/remi-td/zensync-lite",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/remi-td/zensync-lite/issues",
+  "requirements": [],
+  "version": "1.0.0",
+  "zeroconf": [
+    {
+      "type": "_zendure._tcp.local."
+    }
+  ]
+}

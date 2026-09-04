@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-DOMAIN = "zendure_local"
-NAME = "Zendure Local Battery Control"
+DOMAIN = "zensync_lite"
+NAME = "ZenSync Lite"
 MANUFACTURER = "Zendure"
 
 # Network & Timing defaults

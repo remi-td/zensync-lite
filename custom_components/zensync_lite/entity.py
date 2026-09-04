@@ -28,7 +28,7 @@ class ZendureEntity(CoordinatorEntity[ZendureCoordinator]):
         super().__init__(coordinator)
         self._key = key
         # Unique ID must include serial number to prevent duplicate collisions
-        self._attr_unique_id = f"zendure_local_{coordinator.serial}_{key}"
+        self._attr_unique_id = f"zensync_lite_{coordinator.serial}_{key}"
 
     @property
     def unique_id(self) -> str:

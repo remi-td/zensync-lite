@@ -92,7 +92,7 @@ def _get_coordinators_for_call(hass: HomeAssistant, call: ServiceCall) -> list[Z
                 entry = entity_reg.async_get(ent_id)
                 if not entry:
                     continue
-                # Entity unique ID format is zendure_local_<serial>_<key>
+                # Entity unique ID format is zensync_lite_<serial>_<key>
                 if entry.unique_id and entry.unique_id.startswith(f"{DOMAIN}_"):
                     parts = entry.unique_id.split("_")
                     if len(parts) >= 3:
@@ -108,7 +108,7 @@ def _get_coordinators_for_call(hass: HomeAssistant, call: ServiceCall) -> list[Z
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
-    """Register all zendure_local action services."""
+    """Register all zensync_lite action services."""
 
     async def handle_set_charge_limit(call: ServiceCall) -> None:
         limit = call.data[ATTR_LIMIT]

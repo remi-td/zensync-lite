@@ -1,10 +1,10 @@
 """Tests for Zendure capability matrix and write validation."""
 
-from custom_components.zendure_local.capabilities import (
+from custom_components.zensync_lite.capabilities import (
     CAPABILITY_MATRIX,
     get_device_capability,
 )
-from custom_components.zendure_local.const import (
+from custom_components.zensync_lite.const import (
     PROP_AC_MODE,
     PROP_INPUT_LIMIT,
     PROP_MIN_SOC,

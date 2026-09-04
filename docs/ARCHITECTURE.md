@@ -1,6 +1,6 @@
-# Zendure Local Battery Control: Architecture & Design
+# ZenSync Lite: Architecture & Design
 
-This document details the architectural principles, data flow, safety models, and hardware interfaces powering `zendure_local`.
+This document details the architectural principles, data flow, safety models, and hardware interfaces powering `zensync_lite`.
 
 ---
 
@@ -15,7 +15,7 @@ This document details the architectural principles, data flow, safety models, an
                               |
                               v
 +-------------------------------------------------------------+
-| zendure_local Integration (Pure Model & Transaction Layer)  |
+| zensync_lite Integration (Pure Model & Transaction Layer)  |
 | - Truthful device state reflection                          |
 | - Serialized write transactions with confirmation           |
 | - Zero flash wear protection (smartMode: 1)                 |
@@ -31,7 +31,7 @@ This document details the architectural principles, data flow, safety models, an
 
 Traditional integrations often embed an energy manager inside the integration itself. This leads to rigid logic, hidden state transitions, race conditions, and difficulty integrating with existing Home Assistant automations.
 
-`zendure_local` adheres to the Unix philosophy: **do one job exceptionally well**.
+`zensync_lite` adheres to the Unix philosophy: **do one job exceptionally well**.
 1. Maintain an accurate, normalized model of the Zendure battery.
 2. Provide safe, transactional, confirmed controls.
 3. Delegate all automation, strategy, and balancing to Home Assistant automations and blueprints.
@@ -74,13 +74,13 @@ When `smartMode: 1` is supplied in `POST /properties/write`:
 - Power limits take effect immediately.
 - If the unit loses power or restarts, it reloads its baseline non-volatile settings from flash.
 
-`zendure_local` automatically injects `smartMode: 1` into all automation writes by default. Users can toggle persistent/volatile modes via `switch.volatile_write_mode` or the options flow.
+`zensync_lite` automatically injects `smartMode: 1` into all automation writes by default. Users can toggle persistent/volatile modes via `switch.volatile_write_mode` or the options flow.
 
 ---
 
 ## 4. Transaction Lifecycle & Readback Confirmation
 
-Home Assistant entities in `zendure_local` never optimistically pretend a write succeeded before the battery actually accepts and applies it.
+Home Assistant entities in `zensync_lite` never optimistically pretend a write succeeded before the battery actually accepts and applies it.
 
 ```mermaid
 sequenceDiagram
@@ -127,9 +127,9 @@ To ensure multiple identical Zendure units (e.g. two SolarFlow 2400 AC+ units on
 - **Device Identifier**: Formatted as `(DOMAIN, serial)` using the hardware serial number (`sn`) extracted from firmware reports.
 - **Entity Unique ID**:
   ```python
-  self._attr_unique_id = f"zendure_local_{coordinator.serial}_{key}"
+  self._attr_unique_id = f"zensync_lite_{coordinator.serial}_{key}"
   ```
-  Example: `zendure_local_HEC4NENCN490106_charge_limit_setting`
+  Example: `zensync_lite_HEC4NENCN490106_charge_limit_setting`
 - Model names are never used as identifiers.
 
 ---

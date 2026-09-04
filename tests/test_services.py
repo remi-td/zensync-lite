@@ -3,7 +3,7 @@
 import asyncio
 import pytest
 
-from custom_components.zendure_local.const import (
+from custom_components.zensync_lite.const import (
     DOMAIN,
     PROP_AC_MODE,
     PROP_INPUT_LIMIT,
@@ -16,9 +16,9 @@ from custom_components.zendure_local.const import (
     SERVICE_SET_SOC_LIMITS,
     SERVICE_STOP_OUTPUT,
 )
-from custom_components.zendure_local.coordinator import ZendureCoordinator
-from custom_components.zendure_local.services import async_setup_services
-from custom_components.zendure_local.transport.local_http import LocalHttpTransport
+from custom_components.zensync_lite.coordinator import ZendureCoordinator
+from custom_components.zensync_lite.services import async_setup_services
+from custom_components.zensync_lite.transport.local_http import LocalHttpTransport
 
 
 class MockServices:
@@ -46,7 +46,7 @@ class MockHassWithServices:
 
 @pytest.mark.asyncio
 async def test_services_execution(mock_zendure_server):
-    """Test calling zendure_local action services."""
+    """Test calling zensync_lite action services."""
     hass = MockHassWithServices()
     transport = LocalHttpTransport(
         serial="SF2400A10001",

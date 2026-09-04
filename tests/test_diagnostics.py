@@ -2,12 +2,12 @@
 
 import pytest
 
-from custom_components.zendure_local.coordinator import ZendureCoordinator
-from custom_components.zendure_local.diagnostics import (
+from custom_components.zensync_lite.coordinator import ZendureCoordinator
+from custom_components.zensync_lite.diagnostics import (
     async_get_config_entry_diagnostics,
     redact_ip_address,
 )
-from custom_components.zendure_local.transport.local_http import LocalHttpTransport
+from custom_components.zensync_lite.transport.local_http import LocalHttpTransport
 
 
 def test_redact_ip_address():
@@ -49,7 +49,7 @@ async def test_diagnostics_export(mock_zendure_server):
     )
     try:
         await coordinator._async_update_data()
-        hass.data["zendure_local"] = {
+        hass.data["zensync_lite"] = {
             "test_entry_123": {
                 "coordinator": coordinator,
             }

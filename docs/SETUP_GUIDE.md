@@ -1,4 +1,4 @@
-# Zendure Local Battery Control: Setup & Installation Guide
+# ZenSync Lite: Setup & Installation Guide
 
 This guide walks through configuring your Zendure battery, installing the integration in Home Assistant, and testing connectivity.
 
@@ -31,11 +31,11 @@ We recommend assigning a **static DHCP reservation** to your Zendure battery in 
    ```bash
    mkdir -p custom_components
    ```
-3. Copy the `custom_components/zendure_local` directory from this repository into `/config/custom_components/zendure_local`.
+3. Copy the `custom_components/zensync_lite` directory from this repository into `/config/custom_components/zensync_lite`.
 4. Copy the surplus controller blueprint:
    ```bash
-   mkdir -p /config/blueprints/automation/zendure_local
-   cp blueprints/automation/surplus_controller.yaml /config/blueprints/automation/zendure_local/
+   mkdir -p /config/blueprints/automation/zensync_lite
+   cp blueprints/automation/surplus_controller.yaml /config/blueprints/automation/zensync_lite/
    ```
 5. Restart Home Assistant via **Settings > System > Restart**.
 
@@ -70,7 +70,7 @@ Click **Configure** to finish setup.
 ### Option 2: Manual IP Configuration
 1. Go to **Settings > Devices & Services**.
 2. Click **Add Integration** (bottom right).
-3. Search for **Zendure Local Battery Control**.
+3. Search for **ZenSync Lite**.
 4. Enter:
    - **Host**: Your battery IP (e.g. `192.168.1.137`)
    - **Port**: `80` (default)
@@ -84,7 +84,7 @@ Home Assistant probes the battery, detects the model (e.g. `SolarFlow 2400 AC+`)
 
 You can adjust runtime parameters at any time:
 1. Go to **Settings > Devices & Services**.
-2. Find **Zendure Local Battery Control** and click **Configure**.
+2. Find **ZenSync Lite** and click **Configure**.
 3. Available options:
    - **Poll Interval (seconds)**: Frequency of state polling (default: `10` seconds, range 5–60s).
    - **Volatile Writes (`smartMode`)**: When enabled (default: `True`), automation writes modify MCU RAM only, completely eliminating flash memory wear.
@@ -111,5 +111,5 @@ You can adjust runtime parameters at any time:
 - Once communication restores, the warning clears automatically.
 
 ### Battery Changed IP Address
-- Click the **Rediscover Endpoint** button on the device page, or call the `zendure_local.rediscover` action.
+- Click the **Rediscover Endpoint** button on the device page, or call the `zensync_lite.rediscover` action.
 - The integration queries mDNS for the device serial number and updates the IP address dynamically without creating duplicate entities.

@@ -1,12 +1,12 @@
 """Tests for multi-device unique ID collision prevention."""
 
-from custom_components.zendure_local.button import BUTTON_DESCRIPTIONS, ZendureButton
-from custom_components.zendure_local.coordinator import ZendureCoordinator
-from custom_components.zendure_local.number import NUMBER_DESCRIPTIONS, ZendureNumber
-from custom_components.zendure_local.select import ZendureModeSelect
-from custom_components.zendure_local.sensor import CORE_SENSORS, ZendureSensor
-from custom_components.zendure_local.switch import ZendureSmartModeSwitch
-from custom_components.zendure_local.transport.local_http import LocalHttpTransport
+from custom_components.zensync_lite.button import BUTTON_DESCRIPTIONS, ZendureButton
+from custom_components.zensync_lite.coordinator import ZendureCoordinator
+from custom_components.zensync_lite.number import NUMBER_DESCRIPTIONS, ZendureNumber
+from custom_components.zensync_lite.select import ZendureModeSelect
+from custom_components.zensync_lite.sensor import CORE_SENSORS, ZendureSensor
+from custom_components.zensync_lite.switch import ZendureSmartModeSwitch
+from custom_components.zensync_lite.transport.local_http import LocalHttpTransport
 
 
 def test_multi_device_unique_ids():
@@ -37,8 +37,8 @@ def test_multi_device_unique_ids():
         assert ent_a.unique_id != ent_b.unique_id
         assert serial_a in ent_a.unique_id
         assert serial_b in ent_b.unique_id
-        assert ent_a.unique_id.startswith(f"zendure_local_{serial_a}_")
-        assert ent_b.unique_id.startswith(f"zendure_local_{serial_b}_")
+        assert ent_a.unique_id.startswith(f"zensync_lite_{serial_a}_")
+        assert ent_b.unique_id.startswith(f"zensync_lite_{serial_b}_")
         all_ids.add(ent_a.unique_id)
         all_ids.add(ent_b.unique_id)
         total_entities += 2

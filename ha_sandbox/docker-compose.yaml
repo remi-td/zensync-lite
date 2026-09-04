@@ -7,7 +7,7 @@ services:
       - "8123:8123"
     volumes:
       - ./config:/config
-      - ../custom_components/zendure_local:/config/custom_components/zendure_local
-      - ../blueprints/automation/surplus_controller.yaml:/config/blueprints/automation/zendure_local/surplus_controller.yaml
+      - ../custom_components/zensync_lite:/config/custom_components/zensync_lite
+      - ../blueprints/automation/surplus_controller.yaml:/config/blueprints/automation/zensync_lite/surplus_controller.yaml
     environment:
       - TZ=Europe/Paris

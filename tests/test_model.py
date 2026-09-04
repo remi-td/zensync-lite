@@ -1,12 +1,12 @@
 """Tests for Zendure state model and property conversions."""
 
-from custom_components.zendure_local.const import (
+from custom_components.zensync_lite.const import (
     STATE_CHARGING,
     STATE_DISCHARGING,
     STATE_STANDBY,
     STATE_UNKNOWN,
 )
-from custom_components.zendure_local.model import (
+from custom_components.zensync_lite.model import (
     convert_current_amps,
     convert_signed_int16,
     convert_temperature_kelvin_tenth,

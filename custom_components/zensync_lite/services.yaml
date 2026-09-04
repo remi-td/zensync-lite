@@ -3,9 +3,9 @@ set_charge_limit:
   description: Set the maximum AC charging power limit in Watts.
   target:
     device:
-      integration: zendure_local
+      integration: zensync_lite
     entity:
-      integration: zendure_local
+      integration: zensync_lite
   fields:
     limit:
       name: Limit (W)
@@ -23,9 +23,9 @@ set_output_limit:
   description: Set the maximum home discharge power limit in Watts.
   target:
     device:
-      integration: zendure_local
+      integration: zensync_lite
     entity:
-      integration: zendure_local
+      integration: zensync_lite
   fields:
     limit:
       name: Limit (W)
@@ -43,9 +43,9 @@ set_mode:
   description: Set the AC inverter operating mode (Charge or Discharge).
   target:
     device:
-      integration: zendure_local
+      integration: zensync_lite
     entity:
-      integration: zendure_local
+      integration: zensync_lite
   fields:
     mode:
       name: Mode
@@ -64,9 +64,9 @@ set_soc_limits:
   description: Update minimum discharge and target charge SOC percentage thresholds.
   target:
     device:
-      integration: zendure_local
+      integration: zensync_lite
     entity:
-      integration: zendure_local
+      integration: zensync_lite
   fields:
     min_soc:
       name: Minimum SOC (%)
@@ -92,24 +92,24 @@ stop_output:
   description: Immediately stops home power output by setting discharge limit to 0W.
   target:
     device:
-      integration: zendure_local
+      integration: zensync_lite
     entity:
-      integration: zendure_local
+      integration: zensync_lite
 
 refresh:
   name: Refresh
   description: Request immediate status update from the battery device.
   target:
     device:
-      integration: zendure_local
+      integration: zensync_lite
     entity:
-      integration: zendure_local
+      integration: zensync_lite
 
 rediscover:
   name: Rediscover
   description: Trigger mDNS rediscovery and verify endpoint connection.
   target:
     device:
-      integration: zendure_local
+      integration: zensync_lite
     entity:
-      integration: zendure_local
+      integration: zensync_lite

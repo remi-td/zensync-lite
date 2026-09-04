@@ -2,12 +2,12 @@
 
 import pytest
 
-from custom_components.zendure_local.transport.base import (
+from custom_components.zensync_lite.transport.base import (
     TransportConnectionError,
     TransportError,
     TransportTimeoutError,
 )
-from custom_components.zendure_local.transport.local_http import LocalHttpTransport
+from custom_components.zensync_lite.transport.local_http import LocalHttpTransport
 
 
 @pytest.mark.asyncio
