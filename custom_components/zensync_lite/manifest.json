@@ -8,7 +8,7 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/remi-td/zensync-lite/issues",
   "requirements": [],
-  "version": "1.0.0",
+  "version": "0.1.0",
   "zeroconf": [
     {
       "type": "_zendure._tcp.local."

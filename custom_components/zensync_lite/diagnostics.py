@@ -11,7 +11,7 @@ except ImportError:
     ConfigEntry = Any  # type: ignore
     HomeAssistant = Any  # type: ignore
 
-from .const import CONF_HOST, CONF_PORT, CONF_SERIAL, DOMAIN
+from .const import CONF_HOST, CONF_PORT, CONF_SERIAL, DOMAIN, VERSION
 from .coordinator import ZendureCoordinator
 
 
@@ -30,12 +30,9 @@ async def async_get_config_entry_diagnostics(
     entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return redacted diagnostics for a config entry."""
-    entry_data = hass.data.get(DOMAIN, {}).get(entry.entry_id, {})
-    coordinator: ZendureCoordinator | None = entry_data.get("coordinator")
-
-    host = entry.data.get(CONF_HOST, "")
-    serial = entry.data.get(CONF_SERIAL, "")
-
+    coordinator: ZendureCoordinator = hass.data[DOMAIN][entry.entry_id]["coordinator"]
+    host = entry.data.get(CONF_HOST)
+    serial = coordinator.serial
     state = coordinator.current_state if coordinator else None
 
     # Redact serial for privacy, keep last 4 chars
@@ -44,7 +41,7 @@ async def async_get_config_entry_diagnostics(
     diag_data: dict[str, Any] = {
         "integration": {
             "domain": DOMAIN,
-            "version": "1.0.0",
+            "version": VERSION,
         },
         "config_entry": {
             "entry_id": entry.entry_id,
