@@ -108,12 +108,20 @@ class config_entries:
         def async_create_entry(self, **kwargs: Any) -> ConfigFlowResult:
             return ConfigFlowResult({"type": "create_entry", **kwargs})
 
-        def async_abort(self, **kwargs: Any) -> ConfigFlowResult:
-            return ConfigFlowResult({"type": "abort", **kwargs})
+        def async_update_reload_and_abort(
+            self, entry: Any, data_updates: dict[str, Any] | None = None, **kwargs: Any
+        ) -> ConfigFlowResult:
+            if data_updates:
+                entry.data.update(data_updates)
+            return ConfigFlowResult({"type": "abort", "reason": "reconfigure_successful"})
 
     class OptionsFlow:
         def __init__(self, config_entry: Any = None) -> None:
-            self.config_entry = config_entry
+            self._config_entry = config_entry
+
+        @property
+        def config_entry(self) -> Any:
+            return self._config_entry
 
         def async_show_form(self, **kwargs: Any) -> ConfigFlowResult:
             return ConfigFlowResult({"type": "form", **kwargs})

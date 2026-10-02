@@ -5,9 +5,9 @@ import asyncio
 import json
 import sys
 
-from custom_components.zendure_local.capabilities import get_device_capability
-from custom_components.zendure_local.model import parse_report_payload
-from custom_components.zendure_local.transport.local_http import LocalHttpTransport
+from custom_components.zensync_lite.capabilities import get_device_capability
+from custom_components.zensync_lite.model import parse_report_payload
+from custom_components.zensync_lite.transport.local_http import LocalHttpTransport
 
 
 async def probe(host: str, port: int = 80) -> None:

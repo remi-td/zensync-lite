@@ -85,3 +85,40 @@ async def test_config_flow_cannot_connect():
     )
     assert result["type"] == "form"
     assert result["errors"]["base"] == "cannot_connect"
+
+
+@pytest.mark.asyncio
+async def test_options_flow(mock_zendure_server):
+    """Test options flow initialization and submission without 500 error."""
+    from custom_components.zensync_lite.compat import ConfigEntry
+
+    entry = ConfigEntry(
+        entry_id="test_entry_id",
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: mock_zendure_server.port,
+            CONF_SERIAL: "SF2400A10001",
+        },
+        options={
+            CONF_VOLATILE_WRITES: True,
+            "poll_interval": 10,
+        },
+    )
+
+    flow = ZendureConfigFlow.async_get_options_flow(entry)
+    form_res = await flow.async_step_init()
+    assert form_res["type"] == "form"
+    assert form_res["step_id"] == "init"
+
+    save_res = await flow.async_step_init(
+        user_input={
+            CONF_HOST: "192.168.1.136",
+            CONF_PORT: 80,
+            CONF_VOLATILE_WRITES: True,
+            "poll_interval": 15,
+        }
+    )
+    assert save_res["type"] == "create_entry"
+    assert save_res["data"][CONF_HOST] == "192.168.1.136"
+    assert save_res["data"]["poll_interval"] == 15
+

@@ -48,8 +48,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Zendure Local from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    host = entry.data[CONF_HOST]
-    port = entry.data.get(CONF_PORT, DEFAULT_PORT)
+    host = entry.options.get(CONF_HOST, entry.data.get(CONF_HOST))
+    port = entry.options.get(CONF_PORT, entry.data.get(CONF_PORT, DEFAULT_PORT))
     serial = entry.data[CONF_SERIAL]
     model = entry.data.get(CONF_MODEL, "SolarFlow")
 

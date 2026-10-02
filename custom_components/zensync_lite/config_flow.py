@@ -211,6 +211,57 @@ class ZendureConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        """Handle reconfiguring the device host/port."""
+        errors: dict[str, str] = {}
+        entry_id = self.context.get("entry_id")
+        entry = (
+            self._get_reconfigure_entry()
+            if hasattr(self, "_get_reconfigure_entry")
+            else getattr(getattr(self, "hass", None), "config_entries", None)
+            and self.hass.config_entries.async_get_entry(entry_id)
+        )
+
+        if user_input is not None and entry:
+            host = user_input[CONF_HOST].strip()
+            port = user_input.get(CONF_PORT, DEFAULT_PORT)
+            transport = LocalHttpTransport(serial=entry.data.get(CONF_SERIAL, ""), host=host, port=port)
+            try:
+                report = await transport.async_fetch_state()
+                serial = report.get("sn")
+                if serial and entry.unique_id and serial != entry.unique_id:
+                    errors["base"] = "missing_serial"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={
+                            CONF_HOST: host,
+                            CONF_PORT: port,
+                        },
+                    )
+            except Exception:
+                errors["base"] = "cannot_connect"
+            finally:
+                await transport.async_close()
+
+        current_host = entry.data.get(CONF_HOST, "") if entry else ""
+        current_port = entry.data.get(CONF_PORT, DEFAULT_PORT) if entry else DEFAULT_PORT
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=current_host): str,
+                vol.Optional(CONF_PORT, default=current_port): int,
+            }
+        )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=schema,
+            errors=errors,
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -225,7 +276,12 @@ class ZendureOptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
+
+    @property
+    def config_entry(self) -> config_entries.ConfigEntry:
+        """Return config entry."""
+        return getattr(self, "_config_entry", None)
 
     async def async_step_init(
         self,
@@ -237,6 +293,20 @@ class ZendureOptionsFlow(config_entries.OptionsFlow):
 
         schema = vol.Schema(
             {
+                vol.Required(
+                    CONF_HOST,
+                    default=self.config_entry.options.get(
+                        CONF_HOST,
+                        self.config_entry.data.get(CONF_HOST, ""),
+                    ),
+                ): str,
+                vol.Optional(
+                    CONF_PORT,
+                    default=self.config_entry.options.get(
+                        CONF_PORT,
+                        self.config_entry.data.get(CONF_PORT, DEFAULT_PORT),
+                    ),
+                ): int,
                 vol.Optional(
                     CONF_VOLATILE_WRITES,
                     default=self.config_entry.options.get(

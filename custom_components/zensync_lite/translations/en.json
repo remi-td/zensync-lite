@@ -15,6 +15,14 @@
       "zeroconf_confirm": {
         "title": "Discovered Zendure Device",
         "description": "Discovered Zendure {model} ({serial}) at {host}. Would you like to set up local control for this battery?"
+      },
+      "reconfigure": {
+        "title": "Reconfigure Zendure Local Connection",
+        "description": "Update network address for Zendure battery {serial}.",
+        "data": {
+          "host": "IP Address or Hostname",
+          "port": "Port"
+        }
       }
     },
     "error": {
@@ -27,7 +35,8 @@
     },
     "abort": {
       "already_configured": "Device is already configured",
-      "unknown_device": "Discovered service did not supply a valid Zendure serial"
+      "unknown_device": "Discovered service did not supply a valid Zendure serial",
+      "reconfigure_successful": "Reconfiguration was successful"
     }
   },
   "options": {
@@ -36,6 +45,8 @@
         "title": "Zendure Local Options",
         "description": "Adjust local battery control preferences.",
         "data": {
+          "host": "IP Address or Hostname",
+          "port": "Port",
           "volatile_writes": "Volatile writes (smartMode: 1) - memory only, avoids flash wear",
           "poll_interval": "Polling interval in seconds"
         }

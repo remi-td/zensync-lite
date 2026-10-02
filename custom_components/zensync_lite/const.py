@@ -5,7 +5,7 @@ from __future__ import annotations
 DOMAIN = "zensync_lite"
 NAME = "ZenSync Lite"
 MANUFACTURER = "Zendure"
-VERSION = "0.1.0"
+VERSION = "0.1.1"
 
 # Network & Timing defaults
 DEFAULT_PORT = 80
